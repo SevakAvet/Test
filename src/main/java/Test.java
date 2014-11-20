@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Test {
-    static boolean found = false;
+    static volatile boolean found = false;
     static String ans = "";
 
     public static void main(String[] args) {
@@ -13,34 +13,27 @@ public class Test {
     static void brutMultithread() {
         List<Character> alphabet = init();
 
-        int n = 3;
-        List<BrutForcer> brutForcers = new ArrayList<>();
-        int THREADS_COUNT = 10;
-        int size = (int) (Math.pow(alphabet.size(), n) / THREADS_COUNT);
-        int i = 0;
-        int count = 0;
+        int size = 1000;
+        int count = 1;
+        int i = 1;
 
         List<String> tmp = new ArrayList<>();
         for (Character a : alphabet) {
             for (Character b : alphabet) {
                 for (Character c : alphabet) {
-                    ++i;
-                    if(i % size == 0) {
-                        brutForcers.add(new BrutForcer(tmp, count++));
+                    if(count++ < size) {
+                        tmp.add(String.valueOf(a) + String.valueOf(b) + String.valueOf(c));
+                    } else {
+                        count = 0;
+                        new Thread(new BrutForcer(tmp, i++)).run();
                         tmp = new ArrayList<>();
                     }
-
-                    tmp.add(String.valueOf(a) + String.valueOf(b) + String.valueOf(c));
                 }
             }
         }
 
         if(tmp.size() != 0) {
-            brutForcers.add(new BrutForcer(tmp, count));
-        }
-
-        for (BrutForcer brutForcer : brutForcers) {
-            new Thread(brutForcer).run();
+            new Thread(new BrutForcer(tmp, i)).run();
         }
     }
 
